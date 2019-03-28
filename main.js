@@ -4,4 +4,10 @@ const config = require('./config/config.js');
 
 const app = express();
 
-console.log(config.server.host);
+app.post('/login', (req, res) => {
+	return res.send({
+		"uid":"12312341293r2d938r"
+	});
+});
+
+app.listen(config.server.port);

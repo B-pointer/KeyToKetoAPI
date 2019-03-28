@@ -8,5 +8,9 @@
 	"server": {
 		"host": "127.0.0.1",
 		"port": 8080
+	},
+	"jwt": {
+		"secret":INSERT SECRET "HERE",
+		"expireTime":"1h"
 	}
 }

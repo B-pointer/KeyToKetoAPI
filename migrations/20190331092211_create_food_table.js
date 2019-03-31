@@ -1,6 +1,6 @@
 
 exports.up = function(knex, Promise) {
-    return knex.schema.createTable('food', function(table) {
+  return knex.schema.createTable('food', function(table) {
   	table.increments('fid').primary();
   	table.integer('uid');//might be null, foreign key?
   	table.string('name').notNullable();

@@ -2,8 +2,8 @@
 	"database": {
 		"host": "",
 		"user": "",
-		"pass": "",
-		"db": ""
+		"password": "",
+		"database": ""
 	},
 	"server": {
 		"host": "127.0.0.1",

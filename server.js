@@ -1,6 +1,7 @@
 const express = require('express');
 const config = require('./config/config.js');
 const auth = require('./controller/auth.js');
+const knex = require('./controller/db.js');
 
 const app = express();
 

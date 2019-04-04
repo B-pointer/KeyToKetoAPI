@@ -31,6 +31,18 @@ module.exports = function (config, knex, auth, app) {
 			});
 		});
 	});
+	
+	app.post('/register', (req, res) => {
+		//FIXME add input validation for this and /login via validate.js
+		bcrypt.hash(req.body.password, 10).then((hash) => {
+			return knex('users').insert(req.body);
+		}).then(() => {//FIXME need to check result
+			res.json({
+				success: true,
+				token: auth.signToken({uid:uid})
+			});
+		});
+	});
 
 	app.get('/profile', auth.checkToken, (req, res) => {
 		res.json({

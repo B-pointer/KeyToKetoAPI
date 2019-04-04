@@ -32,4 +32,6 @@ app.get('/profile', auth.checkToken, (req, res) => {
 	});
 });
 
-app.listen(config.server.port);
+app.listen(config.listen, () => {
+	console.log('Express listening on ' + config.listen);
+});

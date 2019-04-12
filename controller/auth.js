@@ -13,9 +13,7 @@ module.exports = function (config, knex) {
 			});
 		}
 		
-		token.slice(7, token.length);
-		
-		jwt.verify(token, config.jwt.secret, (err, data) => {
+		jwt.verify(token.slice(7, token.length), config.jwt.secret, (err, data) => {
 			if (err)
 				return res.json({//also change return type
 					success: false,
@@ -27,7 +25,7 @@ module.exports = function (config, knex) {
 		});
 	};
 	
-	result.signToken = function (data) {
+	result.getToken = function (data) {
 		return jwt.sign(data, config.jwt.secret, {expiresIn:config.jwt.expireTime});
 	};
 	

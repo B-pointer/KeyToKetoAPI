@@ -9,19 +9,20 @@ module.exports = function (config, knex, auth, app) {
 			});
 		}
 		
-		knex('user').where({username: req.body.username}).select('uid', 'password').then(result => {
-			if (result.rows.length != 1) {
+		knex('user').where({username: req.body.username}).select('uid', 'password').then(rows => {
+			if (rows.length != 1) {
 				return res.json({
 					success: false,
 					message: 'Invalid username or password'
 				});
 			}
-			var user = result.rows[0];
+			var user = rows[0];
 			bcrypt.compare(req.body.password, user.password).then((match) => {
 				if (match) {
 					return res.json({
 						success: true,
-						token: auth.signToken({uid:user.uid})
+						token: auth.getToken({uid:user.uid}),
+						expires: 3600//FIXME, should be in seconds but jwt wants it as 1h
 					});
 				}
 				res.json({
@@ -34,20 +35,160 @@ module.exports = function (config, knex, auth, app) {
 	
 	app.post('/register', (req, res) => {
 		//FIXME add input validation for this and /login via validate.js
+		//make sure to verify email
 		bcrypt.hash(req.body.password, 10).then((hash) => {
-			return knex('users').insert(req.body);
+			req.body.password = hash;
+			return knex('user').insert(req.body);
 		}).then(() => {//FIXME need to check result
 			res.json({
 				success: true,
-				token: auth.signToken({uid:uid})
+				message: 'Account successfully created' //should probably just log them in here but we don't know their uid so we'd have to do all of the login logic over again
 			});
 		});
 	});
 
 	app.get('/profile', auth.checkToken, (req, res) => {
-		res.json({
-			success: true,
-			message: 'Profile data here'
+		knex('user').where({uid: req.tokenData.uid})
+		.select('username', 'birthdate', 'weight', 'height', 'email', 'gender')
+		.then(rows => {
+			res.json({
+				success: true,
+				profile: rows[0]
+			});
+		});
+	});
+	
+	app.post('/profile', auth.checkToken, (req, res) => {
+		knex('user').where({uid: req.tokenData.uid})//FIXME make email a special case and verify
+		.update(req.body)
+		.then(rows => {
+			res.json({
+				success: true
+			});
+		});
+	});
+	
+	app.post('/changePassword', auth.checkToken, (req, res) => {
+		knex('user').where({uid: req.tokenData.uid}).select('password').then(rows => {
+			bcrypt.compare(req.body.oldPassword, rows[0].password).then((match) => {
+				if (match) {
+					bcrypt.hash(req.body.password, 10).then((hash) => {
+						return knex('user').where({uid: req.tokenData.uid})
+						.update({password: hash});
+					})
+					.then(rows => {
+						res.json({
+							success: true
+						});
+					});
+				} else {
+					res.json({
+						success: false,
+						message: 'Invalid original password'
+					});
+				}
+			});
+		});
+	});
+	
+	app.get('/foodSearch/:foodName', auth.checkToken, (req, res) => {
+		knex('food').where('name', 'like', req.params.foodName + '%')
+		.andWhere({uid: req.tokenData.uid})
+		.orWhereNull('uid')
+		.limit(25)
+		.then(rows => {
+			res.json({
+				success: true,
+				results: rows
+			});
+		});
+	});
+	
+	app.get('/food/:foodID', auth.checkToken, (req, res) => {
+		knex('food').where({fid: req.params.foodID})
+		.andWhere({uid: req.tokenData.uid})
+		.orWhereNull('uid')
+		.limit(25)
+		.then(rows => {
+			res.json({
+				success: true,
+				results: rows[0]
+			});
+		});
+	});
+	
+	app.post('/food/:foodID', auth.checkToken, (req, res) => {
+		var qb = knex('food').where({fid: req.params.foodID, uid: req.tokenData.uid})
+		if (remove in req.body)
+			qb.del();
+		else
+			qb.update(req.body);
+		qb.then(rows => {
+			res.json({
+				success: true
+			});
+		});
+	});
+	
+	app.post('/food', auth.checkToken, (req, res) => {
+		req.body.uid = req.tokenData.uid;
+		knex('food')
+		.insert(req.body)
+		.then(rows => {
+			res.json({
+				success: true
+			});
+		});
+	});
+	
+	app.get('/meal', auth.checkToken, (req, res) => {
+		knex('meal')//FIXME make this a join on the food table
+		.where({uid: req.tokenData.uid})
+		.limit(req.body.limit)
+		.offset(req.body.offset)
+		.then(rows => {
+			res.json({
+				success: true,
+				results: rows
+			});
+		});
+	});
+	
+	app.post('/meal', auth.checkToken, (req, res) => {
+		knex('meal')
+		.where({uid: req.tokenData.uid})
+		.limit(req.body.limit)
+		.offset(req.body.offset)
+		.then(rows => {
+			res.json({
+				success: true,
+				results: rows
+			});
+		});
+	});
+	
+	app.get('/meal/:mealID', auth.checkToken, (req, res) => {
+		knex('meal')//also should be a join
+		.where({mid: req.params.mealID, uid: req.tokenData.uid})
+		.then(rows => {
+			res.json({
+				success: true,
+				meal: rows[0]
+			});
+		});
+	});
+	
+	app.post('/meal/:mealID', auth.checkToken, (req, res) => {
+		var qb = knex('meal')
+		.where({mid: req.params.mealID, uid: req.tokenData.uid});
+		if (remove in req.body)
+			qb.del();
+		else
+			qb.update(req.body);
+		qb.then(rows => {
+			res.json({
+				success: true
+			});
 		});
 	});
 };

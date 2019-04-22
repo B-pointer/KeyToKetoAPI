@@ -142,10 +142,12 @@ module.exports = function (config, knex, auth, app) {
 	});
 	
 	app.get('/meal', auth.checkToken, (req, res) => {
-		knex('meal')//FIXME make this a join on the food table
+		knex('meal')//FIXME add calculated column for calories = servings * calories_per_serving
+		.innerJoin('food', 'meal.fid', 'food.fid')
 		.where({uid: req.tokenData.uid})
 		.limit(req.body.limit)
 		.offset(req.body.offset)
+		.orderBy('consumed_at', 'desc')
 		.then(rows => {
 			res.json({
 				success: true,
@@ -156,19 +158,17 @@ module.exports = function (config, knex, auth, app) {
 	
 	app.post('/meal', auth.checkToken, (req, res) => {
 		knex('meal')
-		.where({uid: req.tokenData.uid})
-		.limit(req.body.limit)
-		.offset(req.body.offset)
+		.insert(req.body)
 		.then(rows => {
 			res.json({
-				success: true,
-				results: rows
+				success: true
 			});
 		});
 	});
 	
 	app.get('/meal/:mealID', auth.checkToken, (req, res) => {
-		knex('meal')//also should be a join
+		knex('meal')//FIXME also add calculated column
+		.innerJoin('food', 'meal.fid', 'food.fid')
 		.where({mid: req.params.mealID, uid: req.tokenData.uid})
 		.then(rows => {
 			res.json({
@@ -188,6 +188,24 @@ module.exports = function (config, knex, auth, app) {
 		qb.then(rows => {
 			res.json({
 				success: true
+			});
+		});
+	});
+	
+	app.get('/stats', auth.checkToken, (req, res) => {
+		knex('meal')//FIXME add calculated column for calories = servings * calories_per_serving
+		.sum('calories')//might need to be a subquery, don't know with knex
+		.innerJoin('food', 'meal.fid', 'food.fid')
+		.where({uid: req.tokenData.uid})
+		.andWhere('consumed_at', '>', 'DATE_SUB(now(), INTERVAL 1 YEAR)')
+		.limit(req.body.limit)
+		.offset(req.body.offset)
+		.orderBy('consumed_at', 'desc')
+		.groupBy('WEEK(consumed_at)')
+		.then(rows => {
+			res.json({
+				success: true,
+				results: rows
 			});
 		});
 	});

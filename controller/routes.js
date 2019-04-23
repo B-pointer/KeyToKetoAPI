@@ -21,8 +21,7 @@ module.exports = function (config, knex, auth, app) {
 				if (match) {
 					return res.json({
 						success: true,
-						token: auth.getToken({uid:user.uid}),
-						expires: 3600//FIXME, should be in seconds but jwt wants it as 1h
+						token: auth.getToken({uid:user.uid})
 					});
 				}
 				res.json({
@@ -31,6 +30,10 @@ module.exports = function (config, knex, auth, app) {
 				});
 			});
 		});
+	});
+	
+	app.post('/logout', auth.checkToken, (req, res) => {
+		return res.json({success: true});//NOP for now, change to deleting row from session table later
 	});
 	
 	app.post('/register', (req, res) => {

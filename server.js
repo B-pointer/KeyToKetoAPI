@@ -10,6 +10,4 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 require('./controller/routes.js')(config, knex, auth, app);
 
-app.listen(config.listen, () => {
-	console.log('Express listening on ' + config.listen);
-});
+app.listen(config.listen);

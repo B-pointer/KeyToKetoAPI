@@ -6,8 +6,9 @@
 		"database": ""
 	},
 	"listen": 8080,
+	"autoquit": false,
 	"jwt": {
-		"secret":INSERT SECRET "HERE",
+		"secret":"INSERT SECRET HERE",
 		"expireTime":"1h"
 	}
 }

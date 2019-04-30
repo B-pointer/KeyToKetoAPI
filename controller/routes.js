@@ -201,11 +201,11 @@ module.exports = function (config, knex, auth, app) {
 		.sum('calories')//might need to be a subquery, don't know with knex
 		.innerJoin('food', 'meal.fid', 'food.fid')
 		.where({"meal.uid": req.tokenData.uid})
-		.andWhere('consumed_at', '>', 'DATE_SUB(now(), INTERVAL 1 YEAR)')
-		.limit(req.body.limit)
-		.offset(req.body.offset)
+		.andWhere('consumed_at', '>', knex.raw('DATE_SUB(now(), INTERVAL 1 YEAR)'))
+		//.limit(req.body.limit)
+		//.offset(req.body.offset)
 		.orderBy('consumed_at', 'desc')
-		.groupBy('WEEK(consumed_at)')
+		.groupBy(knex.raw('WEEK(consumed_at)'))
 		.then(rows => {
 			res.json({
 				success: true,

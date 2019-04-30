@@ -95,7 +95,7 @@ module.exports = function (config, knex, auth, app) {
 	});
 	
 	app.get('/foodSearch/:foodName', auth.checkToken, (req, res) => {
-		knex('food').where('name', 'like', req.params.foodName + '%')
+		knex('food').where('name', 'like', '%' + req.params.foodName + '%')
 		.andWhere({uid: req.tokenData.uid})
 		.orWhereNull('uid')
 		.limit(25)
@@ -160,6 +160,7 @@ module.exports = function (config, knex, auth, app) {
 	});
 	
 	app.post('/meal', auth.checkToken, (req, res) => {
+		req.body.uid = req.tokenData.uid;
 		knex('meal')
 		.insert(req.body)
 		.then(rows => {

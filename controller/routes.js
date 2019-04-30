@@ -200,7 +200,7 @@ module.exports = function (config, knex, auth, app) {
 		knex('meal')//FIXME add calculated column for calories = servings * calories_per_serving
 		.sum('calories')//might need to be a subquery, don't know with knex
 		.innerJoin('food', 'meal.fid', 'food.fid')
-		.where({uid: req.tokenData.uid})
+		.where({"meal.uid": req.tokenData.uid})
 		.andWhere('consumed_at', '>', 'DATE_SUB(now(), INTERVAL 1 YEAR)')
 		.limit(req.body.limit)
 		.offset(req.body.offset)

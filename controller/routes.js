@@ -147,7 +147,7 @@ module.exports = function (config, knex, auth, app) {
 	app.get('/meal', auth.checkToken, (req, res) => {
 		knex('meal')//FIXME add calculated column for calories = servings * calories_per_serving
 		.innerJoin('food', 'meal.fid', 'food.fid')
-		.where({uid: req.tokenData.uid})
+		.where({'meal.uid': req.tokenData.uid})
 		.limit(req.body.limit)
 		.offset(req.body.offset)
 		.orderBy('consumed_at', 'desc')

@@ -50,8 +50,8 @@ module.exports = function (config, knex, auth, app) {
 		});
 	});
 	
-	app.get('/checkUsername', (req, res) => {
-		knex('user').where({username: req.body.username}).select('uid').then(rows => {
+	app.get('/checkUsername/:username', (req, res) => {
+		knex('user').where({username: req.params.username}).select('uid').then(rows => {
 			if (rows.length != 1) {
 				return res.json({
 					success: true,

@@ -1,0 +1,8 @@
+exports.seed = function(knex, Promise) {
+  // Deletes ALL existing entries
+  return knex('food').whereNull('uid').del()
+    .then(function () {
+      // Inserts seed entries
+      return knex('food').insert(require('../data/foods.js'));
+    });
+};

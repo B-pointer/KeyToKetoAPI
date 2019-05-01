@@ -49,10 +49,26 @@ module.exports = function (config, knex, auth, app) {
 			});
 		});
 	});
-
+	
+	app.get('/checkUsername', (req, res) => {
+		knex('user').where({username: req.body.username}).select('uid').then(rows => {
+			if (rows.length != 1) {
+				return res.json({
+					success: true,
+					exists: false
+				});
+			} else {
+				return res.json({
+					success: true,
+					exists: true
+				});
+			}
+		});
+	});
+	
 	app.get('/profile', auth.checkToken, (req, res) => {
 		knex('user').where({uid: req.tokenData.uid})
-		.select('username', 'birthdate', 'weight', 'height', 'email', 'gender')
+		.select('username', 'birthdate', 'weight', 'height', 'email', 'gender', 'calorie_goal')
 		.then(rows => {
 			res.json({
 				success: true,
@@ -63,7 +79,7 @@ module.exports = function (config, knex, auth, app) {
 	
 	app.post('/profile', auth.checkToken, (req, res) => {
 		knex('user').where({uid: req.tokenData.uid})//FIXME make email a special case and verify
-		.update(req.body)
+		.update(req.body)//FIXME, make sure they don't change the password here
 		.then(rows => {
 			res.json({
 				success: true

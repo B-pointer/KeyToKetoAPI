@@ -112,10 +112,10 @@ module.exports = function (config, knex, auth, app) {
 	
 	app.get('/foodSearch/:foodName', auth.checkToken, (req, res) => {
 		knex('food').where('name', 'like', '%' + req.params.foodName + '%')
-		.andWhere((builder) => {
+		/*.andWhere((builder) => {
 			builder.where({uid: req.tokenData.uid})
 			.orWhereNull('uid')
-		})
+		})*/
 		.limit(25)
 		.then(rows => {
 			res.json({
@@ -127,10 +127,10 @@ module.exports = function (config, knex, auth, app) {
 	
 	app.get('/food/:foodID', auth.checkToken, (req, res) => {
 		knex('food').where({fid: req.params.foodID})
-		.andWhere((builder) => {
+		/*.andWhere((builder) => {
 			builder.where({uid: req.tokenData.uid})
 			.orWhereNull('uid')
-		})
+		})*/
 		.then(rows => {
 			res.json({
 				success: true,
@@ -139,7 +139,7 @@ module.exports = function (config, knex, auth, app) {
 		});
 	});
 	
-	app.post('/food/:foodID', auth.checkToken, (req, res) => {
+	/*app.post('/food/:foodID', auth.checkToken, (req, res) => {
 		var qb = knex('food').where({fid: req.params.foodID, uid: req.tokenData.uid})
 		req.body.fid = req.params.foodID;//fixme, just unset these
 		req.body.uid = req.tokenData.uid;
@@ -163,14 +163,11 @@ module.exports = function (config, knex, auth, app) {
 				success: true
 			});
 		});
-	});
+	});*/
 	
 	app.get('/meal', auth.checkToken, (req, res) => {
-		knex('meal')//FIXME add calculated column for calories = servings * calories_per_serving
-		.innerJoin('food', 'meal.fid', 'food.fid')
-		.where({'meal.uid': req.tokenData.uid})
-		.limit(req.body.limit)
-		.offset(req.body.offset)
+		knex('meal')
+		.where({uid: req.tokenData.uid})
 		.orderBy('consumed_at', 'desc')
 		.then(rows => {
 			res.json({
@@ -183,17 +180,17 @@ module.exports = function (config, knex, auth, app) {
 	app.post('/meal', auth.checkToken, (req, res) => {
 		req.body.uid = req.tokenData.uid;
 		knex('meal')
-		.insert(req.body)
+		.insert(req.body, ['mid'])
 		.then(rows => {
 			res.json({
-				success: true
+				success: true,
+				mid: rows[0]
 			});
 		});
 	});
 	
 	app.get('/meal/:mealID', auth.checkToken, (req, res) => {
 		knex('meal')//FIXME also add calculated column
-		.innerJoin('food', 'meal.fid', 'food.fid')
 		.where({mid: req.params.mealID, uid: req.tokenData.uid})
 		.then(rows => {
 			res.json({
@@ -206,7 +203,7 @@ module.exports = function (config, knex, auth, app) {
 	app.post('/meal/:mealID', auth.checkToken, (req, res) => {
 		var qb = knex('meal')
 		.where({mid: req.params.mealID, uid: req.tokenData.uid});
-		if (remove in req.body)
+		if (req.body.remove)
 			qb.del();
 		else
 			qb.update(req.body);
@@ -217,7 +214,7 @@ module.exports = function (config, knex, auth, app) {
 		});
 	});
 	
-	app.get('/stats', auth.checkToken, (req, res) => {
+	/*app.get('/stats', auth.checkToken, (req, res) => {
 		knex('meal')//FIXME add calculated column for calories = servings * calories_per_serving
 		.sum('calories')//might need to be a subquery, don't know with knex
 		.innerJoin('food', 'meal.fid', 'food.fid')
@@ -233,5 +230,5 @@ module.exports = function (config, knex, auth, app) {
 				results: rows
 			});
 		});
-	});
+	});*/
 };

@@ -112,8 +112,7 @@ module.exports = function (config, knex, auth, app) {
 	
 	app.get('/foodSearch/:foodName', auth.checkToken, (req, res) => {
 		knex('food').where('name', 'like', '%' + req.params.foodName + '%')
-		.andWhere({uid: req.tokenData.uid})
-		.orWhereNull('uid')
+		.andWhereIn('uid', [req.tokenData.uid, null])
 		.limit(25)
 		.then(rows => {
 			res.json({
@@ -125,9 +124,7 @@ module.exports = function (config, knex, auth, app) {
 	
 	app.get('/food/:foodID', auth.checkToken, (req, res) => {
 		knex('food').where({fid: req.params.foodID})
-		.andWhere({uid: req.tokenData.uid})
-		.orWhereNull('uid')
-		.limit(25)
+		.andWhereIn('uid', [req.tokenData.uid, null])
 		.then(rows => {
 			res.json({
 				success: true,
@@ -138,6 +135,8 @@ module.exports = function (config, knex, auth, app) {
 	
 	app.post('/food/:foodID', auth.checkToken, (req, res) => {
 		var qb = knex('food').where({fid: req.params.foodID, uid: req.tokenData.uid})
+		req.body.fid = req.params.foodID;//fixme, just unset these
+		req.body.uid = req.tokenData.uid;
 		if (remove in req.body)
 			qb.del();
 		else
